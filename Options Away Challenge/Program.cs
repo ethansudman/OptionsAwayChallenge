@@ -17,10 +17,12 @@ namespace Options_Away_Challenge
 
             Program.PopulateBucket(bucketData);
 
-            Program.Serialize(bucketData);
+            var bucketList = Bucket.ToBucket(bucketData);
+
+            Program.Serialize(bucketList);
         }
 
-        private static void Serialize(Dictionary<string, Dictionary<string, Dictionary<string, List<Flight>>>> bucket)
+        private static void Serialize(List<Bucket> bucket)
         {
             using (var fstream = new FileStream(Directory.GetCurrentDirectory() + @"\results.json", FileMode.Create))
             {
@@ -30,14 +32,13 @@ namespace Options_Away_Challenge
                     DateTimeFormat = new DateTimeFormat("yyyy-MM-dd HH:mm:ss")
                 };
 
-                var serializer = new DataContractJsonSerializer(typeof(Dictionary<string, Dictionary<string, Dictionary<string, List<Flight>>>>), settings);
+                var serializer = new DataContractJsonSerializer(typeof(List<Bucket>), settings);
                 serializer.WriteObject(fstream, bucket);
             }
         }
 
-        private static void PopulateBucket(Dictionary<string, Dictionary<string, Dictionary<string, List<Flight>>>> bucket)
+        private static void PopulateBucket(Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> bucket)
         {
-            // Hardcoding this isn't goood
             using (var reader = new StreamReader(Directory.GetCurrentDirectory() + @"\flight_data.json"))
             {
                 while (!reader.EndOfStream)
@@ -58,15 +59,15 @@ namespace Options_Away_Challenge
                         flight.OptionDuration :
                         (bucket[key][key2].ContainsKey("*") ? "*" : bucket[key][key2].Keys.First());
 
-                    bucket[key][key2][key3].Add(flight);
+                    bucket[key][key2][key3].Add(flight.ToString());
                 } // Finish looping through the lines
-            }
+            } // Dispose of stream reader
         }
 
-        private static Dictionary<string, Dictionary<string, Dictionary<string, List<Flight>>>> BuildBucketData()
+        private static Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>> BuildBucketData()
         {
             // Admittedly this type is a bit ugly
-            var dictionary = new Dictionary<string, Dictionary<string, Dictionary<string, List<Flight>>>>();
+            var dictionary = new Dictionary<string, Dictionary<string, Dictionary<string, List<string>>>>();
 
             // We could just do File.ReadAllLines here but we take somewhat less of a memory hit this way; the sample file is small but a real data file could
             // potentially be much larger
@@ -83,20 +84,20 @@ namespace Options_Away_Challenge
                         if (dictionary[split[0]].ContainsKey(split[1]))
                         {
                             if (!dictionary[split[0]][split[1]].ContainsKey(split[2]))
-                                dictionary[split[0]][split[1]][split[2]] = new List<Flight>();
+                                dictionary[split[0]][split[1]][split[2]] = new List<string>();
                         }
                         else
                         {
-                            dictionary[split[0]][split[1]] = new Dictionary<string, List<Flight>>();
-                            dictionary[split[0]][split[1]][split[2]] = new List<Flight>();
+                            dictionary[split[0]][split[1]] = new Dictionary<string, List<string>>();
+                            dictionary[split[0]][split[1]][split[2]] = new List<string>();
                         }
                     }
 
                     else
                     {
-                        dictionary[split[0]] = new Dictionary<string, Dictionary<string, List<Flight>>>();
-                        dictionary[split[0]][split[1]] = new Dictionary<string, List<Flight>>();
-                        dictionary[split[0]][split[1]][split[2]] = new List<Flight>();
+                        dictionary[split[0]] = new Dictionary<string, Dictionary<string, List<string>>>();
+                        dictionary[split[0]][split[1]] = new Dictionary<string, List<string>>();
+                        dictionary[split[0]][split[1]][split[2]] = new List<string>();
                     }
 
                     //dictionary[split[0]][split[1]][split[2]]

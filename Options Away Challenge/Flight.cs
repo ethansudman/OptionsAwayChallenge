@@ -70,7 +70,7 @@ namespace Options_Away_Challenge
                                 Destination,
                                 cabin_class,
                                 OptionDuration,
-                                Departure);
+                                Departure.ToString("yyyy-MM-dd HH:mm:ss"));
         } // End ToString method
     }
 }
